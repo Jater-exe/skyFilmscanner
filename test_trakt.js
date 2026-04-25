@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const CLIENT_ID = "AQUI_EL_TEU_CLIENT_ID";
+const CLIENT_ID = "TRAKT_CLIENT_ID";
 
 async function getWatchedMovies(username) {
     try {
