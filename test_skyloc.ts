@@ -1,8 +1,8 @@
-const axios = require("axios");
+import axios, { AxiosError } from "axios";
 
 const SKYSCANNER_API_KEY = "LA_VOSTRA_SKYSCANNER_API_KEY";
 
-export  async function getSkyscannerPlace(locationName) {
+export  async function getSkyscannerPlace(locationName:string) {
     try {
         const res = await axios.get(
             "https://partners.api.skyscanner.net/apiservices/v3/autosuggest/flights",
@@ -25,8 +25,10 @@ export  async function getSkyscannerPlace(locationName) {
         return places[0];
 
     } catch (error) {
-        console.error("Error Skyscanner place:", locationName);
-        console.error(error.response && error.response.data || error.message);
-        return null;
+        if (error instanceof AxiosError){
+            console.error("Error Skyscanner place:", locationName);
+            console.error(error.response && error.response.data || error.message);
+        }
+        return null
     }
 }

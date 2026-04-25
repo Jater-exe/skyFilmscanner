@@ -1,8 +1,8 @@
-const axios = require("axios");
+import axios from "axios"
 
-const { getRatingMovies, getRatingShows } = require("./test_trakt");
+import { getRatingMovies, getRatingShows } from "./test_trakt"
 
-async function getWikidataLocations(imdbId) {
+export async function getWikidataLocations(imdbId) {
     try {
         const sparql = `
             SELECT ?locationLabel WHERE {
@@ -33,7 +33,7 @@ async function getWikidataLocations(imdbId) {
     }
 }
 
-async function main() {
+export async function main() {
     const username = "sean";
 
     const rated_movies = await getRatingMovies(username);
@@ -65,4 +65,3 @@ async function main() {
     }
 }
 
-main();
