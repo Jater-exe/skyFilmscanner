@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 
 import { getRatingMovies, getRatingShows } from "./test_trakt";
+import { getSkyscannerPlace } from "./test_skyloc";
 
 interface WikidataBinding {
     locationLabel: {
@@ -76,17 +77,22 @@ export async function main(): Promise<void> {
         }))
     ];
 
+
+    var res = [];
     for (const item of topContent) {
         if (!item.imdb_id) continue;
 
         const locations = await getWikidataLocations(item.imdb_id);
 
-        console.log(item.title + ":");
 
         if (locations.length === 0) {
-            console.log("No locations found");
+            //console.log("No locations found");
         } else {
-            console.log(locations.slice(0, 5));
+            for (const loc of locations) {
+                const loc_airport = await getSkyscannerPlace(loc);
+                
+            }
+            //console.log(locations.slice(0, 5));
         }
     }
 }
