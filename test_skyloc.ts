@@ -2,7 +2,21 @@ import axios, { AxiosError } from "axios";
 
 const SKYSCANNER_API_KEY = "sh782613596881417389290430162312";
 
-export  async function getSkyscannerPlace(locationName:string) {
+export interface SkyscannerPlace {
+    entityId: string;
+    iataCode?: string;
+    parentId?: string;
+    name: string;
+    countryId?: string;
+    countryName?: string;
+    cityName?: string;
+    location?: string;
+    hierarchy?: string;
+    type?: string;
+    highlighting?: number[][];
+}
+
+export async function getSkyscannerPlace(locationName: string): Promise<SkyscannerPlace | null> {
     try {
         const res = await axios.post(
             "https://partners.api.skyscanner.net/apiservices/v3/autosuggest/flights",
@@ -14,23 +28,18 @@ export  async function getSkyscannerPlace(locationName:string) {
                 },
             },
             {
-                headers: {
-                    "x-api-key": SKYSCANNER_API_KEY,
-                },
-            },
+                headers: { "x-api-key": SKYSCANNER_API_KEY },
+            }
         );
 
-        const places = res.data.places || [];
-
-        if (places.length === 0) return null;
-
-        return places[0];
+        const places: SkyscannerPlace[] = res.data.places || [];
+        return places.length === 0 ? null : places[0];
 
     } catch (error) {
-        if (error instanceof AxiosError){
-            console.error("Error Skyscanner place:", locationName);
-            console.error(error.response && error.response.data || error.message);
+        if (error instanceof AxiosError) {
+            console.error(`Error Skyscanner place: "${locationName}"`);
+            console.error(error.response?.data || error.message);
         }
-        return null
+        return null;
     }
 }
