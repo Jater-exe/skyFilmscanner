@@ -1,11 +1,33 @@
-const axios = require("axios");
+import axios, { AxiosError } from "axios";
 
-const CLIENT_ID = "09416659f45334451c291b63fc404c05942b5bd23fbd277b1ca41bf196cc6263";
+const CLIENT_ID: string = "09416659f45334451c291b63fc404c05942b5bd23fbd277b1ca41bf196cc6263";
 
-// Pel·lícules amb rating >= 7
-async function getRatingMovies(username) {
+interface TraktMovieItem {
+    rating: number;
+    movie: {
+        title: string;
+        ids: {
+            imdb: string;
+        };
+    };
+}
+
+interface TraktShowItem {
+    rating: number;
+    show: {
+        title: string;
+        ids: {
+            imdb: string;
+        };
+    };
+}
+
+
+export async function getRatingMovies(
+    username: string
+): Promise<TraktMovieItem[]> {
     try {
-        const res = await axios.get(
+        const res = await axios.get<TraktMovieItem[]>(
             `https://api.trakt.tv/users/${username}/ratings/movies`,
             {
                 headers: {
@@ -19,17 +41,19 @@ async function getRatingMovies(username) {
         return res.data.filter(item => item.rating >= 7);
 
     } catch (error) {
-        console.error(
-            (error.response && error.response.data) || error.message
-        );
+        if (error instanceof AxiosError) {
+            console.error(error.response?.data || error.message);
+        }
         return [];
     }
 }
 
-// Sèries amb rating >= 7
-async function getRatingShows(username) {
+
+export async function getRatingShows(
+    username: string
+): Promise<TraktShowItem[]> {
     try {
-        const res = await axios.get(
+        const res = await axios.get<TraktShowItem[]>(
             `https://api.trakt.tv/users/${username}/ratings/shows`,
             {
                 headers: {
@@ -43,14 +67,9 @@ async function getRatingShows(username) {
         return res.data.filter(item => item.rating >= 7);
 
     } catch (error) {
-        console.error(
-            (error.response && error.response.data) || error.message
-        );
+        if (error instanceof AxiosError) {
+            console.error(error.response?.data || error.message);
+        }
         return [];
     }
 }
-
-module.exports = {
-    getRatingMovies,
-    getRatingShows
-};

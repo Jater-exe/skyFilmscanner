@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 
-const SKYSCANNER_API_KEY = "LA_VOSTRA_SKYSCANNER_API_KEY";
+const SKYSCANNER_API_KEY = "sh782613596881417389290430162312";
 
 export  async function getSkyscannerPlace(locationName:string) {
     try {
