@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 
 import { getRatingMovies, getRatingShows } from "./test_trakt";
-import { getSkyscannerPlace, SkyscannerPlace } from "./test_skyloc";
+import { getSkyscannerPlace, getSkyscannerFlight, SkyscannerPlace } from "./test_skyloc";
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -152,8 +152,28 @@ export async function main(): Promise<void> {
     ];
 
     const results = await chunked(topContent.filter(i => i.imdb_id), 5, processItem);
+    const demo_source = await getSkyscannerPlace("Barcelona");
 
     printResults(results);
+
+    if (demo_source) {
+        console.log("\nBarcelona:");
+        console.log(JSON.stringify({ entityId: demo_source.entityId, iataCode: demo_source.iataCode }, null, 2));
+    }
+
+    // Test flight search
+    if (demo_source && results.length > 0 && results[0].locationAirports.length > 0) {
+        const first = { location: "Barcelona", airport: demo_source };
+        const second = results[0].locationAirports[0];
+        console.log(`\nSearching flight from ${first.location} to ${second.location}`);
+        const flightResult = await getSkyscannerFlight(first.airport.entityId, second.airport.entityId, "2026-05-01");
+        if (flightResult) {
+            console.log("Flight search status:", flightResult.status);
+            console.log("Itineraries found:", flightResult.content?.results?.itineraries?.length || 0);
+        } else {
+            console.log("No flight result");
+        }
+    }
 }
 
 main();
