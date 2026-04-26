@@ -23,7 +23,8 @@ export async function getSkyscannerPlace(locationName: string): Promise<Skyscann
             {
                 query: {
                     market: "ES",
-                    locale: "en-GB",
+                    locale: "es-ES",
+                    currency: "EUR",
                     searchTerm: locationName,
                 },
             },
@@ -51,23 +52,36 @@ export interface SkyscannerFlightResponse {
     content: any;
 }
 
-export async function getSkyscannerFlight(source: string, destination: string, date: string): Promise<SkyscannerFlightResponse | null> {
+export async function getSkyscannerFlight(source: string, destination: string, date?: string): Promise<SkyscannerFlightResponse | null> {
     try {
-        const [year, month, day] = date.split('-').map(Number);
+        const queryLeg: any = {
+            originPlace: {
+                queryPlace: {
+                    entityId: source
+                }
+            },
+            destinationPlace: {
+                queryPlace: {
+                    entityId: destination
+                }
+            }
+        };
+
+        if (date) {
+            const [year, month, day] = date.split("-").map(Number);
+            queryLeg.fixedDate = { year, month, day };
+        } else {
+            queryLeg.anytime = true;
+        }
+
         const res = await axios.post(
-            "https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/create",
+            "https://partners.api.skyscanner.net/apiservices/v3/flights/indicative/search",
             {
                 query: {
-                    market: "UK",
-                    locale: "en-GB",
-                    currency: "GBP",
-                    queryLegs: [
-                        {
-                            originPlaceId: { entityId: source },
-                            destinationPlaceId: { entityId: destination },
-                            date: { year, month, day }
-                        }
-                    ],
+                    market: "ES",
+                    locale: "es-ES",
+                    currency: "EUR",
+                    queryLegs: [queryLeg],
                     adults: 1,
                     cabinClass: "CABIN_CLASS_ECONOMY"
                 }
@@ -76,12 +90,11 @@ export async function getSkyscannerFlight(source: string, destination: string, d
                 headers: { "x-api-key": SKYSCANNER_API_KEY }
             }
         );
-
         return res.data;
 
     } catch (error) {
         if (error instanceof AxiosError) {
-            console.error(`Error Skyscanner flight: "${source}" to "${destination}" on ${date}`);
+            console.error(`Error Skyscanner flight: "${source}" to "${destination}" on date ${date}`);
             console.error(error.response?.data || error.message);
         }
         return null;

@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
+import * as readline from "readline/promises";
+import { stdin as input, stdout as output } from "process";
 
 import { getRatingMovies, getRatingShows } from "./test_trakt";
 import { getSkyscannerPlace, getSkyscannerFlight, SkyscannerPlace } from "./test_skyloc";
 
-// ── Tipos ────────────────────────────────────────────────────────────────────
+
 
 interface WikidataBinding {
     locationLabel: {
@@ -28,7 +30,7 @@ interface ContentWithAirports {
     locationAirports: { location: string; airport: SkyscannerPlace }[];
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 const LOCATION_BLACKLIST = [
     /studio/i,
@@ -81,7 +83,7 @@ async function chunked<T, R>(
     return results;
 }
 
-// ── API calls ────────────────────────────────────────────────────────────────
+
 
 export async function getWikidataLocations(imdbId: string): Promise<string[]> {
     try {
@@ -130,10 +132,14 @@ async function processItem(item: TopContentItem): Promise<ContentWithAirports> {
     return { ...item, locationAirports };
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+
 
 export async function main(): Promise<void> {
-    const username = "jater06";
+    const rl = readline.createInterface({ input, output });
+    const username = await rl.question("Enter Trakt.tv username: ");
+    const source_city = await rl.question("Enter origin city: ");
+    rl.close();
+    console.log("Entered username and origin city are:", username, source_city);
 
     const [rated_movies, rated_shows] = await Promise.all([
         getRatingMovies(username),
@@ -152,26 +158,35 @@ export async function main(): Promise<void> {
     ];
 
     const results = await chunked(topContent.filter(i => i.imdb_id), 5, processItem);
-    const demo_source = await getSkyscannerPlace("Barcelona");
-
-    printResults(results);
+    const demo_source = await getSkyscannerPlace(source_city);
 
     if (demo_source) {
-        console.log("\nBarcelona:");
+        console.log("\nOrigin city:",source_city, "\n,", demo_source.iataCode);
         console.log(JSON.stringify({ entityId: demo_source.entityId, iataCode: demo_source.iataCode }, null, 2));
     }
 
     // Test flight search
     if (demo_source && results.length > 0 && results[0].locationAirports.length > 0) {
-        const first = { location: "Barcelona", airport: demo_source };
-        const second = results[0].locationAirports[0];
-        console.log(`\nSearching flight from ${first.location} to ${second.location}`);
-        const flightResult = await getSkyscannerFlight(first.airport.entityId, second.airport.entityId, "2026-05-01");
-        if (flightResult) {
-            console.log("Flight search status:", flightResult.status);
-            console.log("Itineraries found:", flightResult.content?.results?.itineraries?.length || 0);
-        } else {
-            console.log("No flight result");
+        for (const film of results) {
+            console.log("Current film:", film.title);
+            const first = { location: source_city, airport: demo_source};
+            for (const place of film.locationAirports) {
+                const second = place;const flightResult = await getSkyscannerFlight(first.airport.entityId, second.airport.entityId);
+                console.log(`\n  Searching flight from ${first.location} to ${second.location}`);
+                if (flightResult) {
+                    const quotes = flightResult.content?.results?.quotes || {};
+                    const quotesCount = Object.keys(quotes).length;
+                    console.log("    Quotes found:", quotesCount);
+                    if (quotesCount > 0) {
+                        const firstQuote = Object.values(quotes)[0] as any;
+                        console.log("    Cheapest flight:", firstQuote.minPrice?.amount, "€");
+                    }
+                }
+                else {
+                    console.log("    No flight result");
+                }
+
+            }
         }
     }
 }
