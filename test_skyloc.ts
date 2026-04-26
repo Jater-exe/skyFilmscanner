@@ -43,3 +43,47 @@ export async function getSkyscannerPlace(locationName: string): Promise<Skyscann
         return null;
     }
 }
+
+export interface SkyscannerFlightResponse {
+    sessionToken: string;
+    status: string;
+    action: string;
+    content: any;
+}
+
+export async function getSkyscannerFlight(source: string, destination: string, date: string): Promise<SkyscannerFlightResponse | null> {
+    try {
+        const [year, month, day] = date.split('-').map(Number);
+        const res = await axios.post(
+            "https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/create",
+            {
+                query: {
+                    market: "UK",
+                    locale: "en-GB",
+                    currency: "GBP",
+                    queryLegs: [
+                        {
+                            originPlaceId: { entityId: source },
+                            destinationPlaceId: { entityId: destination },
+                            date: { year, month, day }
+                        }
+                    ],
+                    adults: 1,
+                    cabinClass: "CABIN_CLASS_ECONOMY"
+                }
+            },
+            {
+                headers: { "x-api-key": SKYSCANNER_API_KEY }
+            }
+        );
+
+        return res.data;
+
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            console.error(`Error Skyscanner flight: "${source}" to "${destination}" on ${date}`);
+            console.error(error.response?.data || error.message);
+        }
+        return null;
+    }
+}
