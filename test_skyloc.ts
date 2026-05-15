@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
-
-const SKYSCANNER_API_KEY = "sh782613596881417389290430162312";
+import dotenv from 'dotenv';
+dotenv.config();
+const SKYSCANNER_API_KEY = process.env.SKYSCANNER_API_KEY;
 
 export interface SkyscannerPlace {
     entityId: string;
