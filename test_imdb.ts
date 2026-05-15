@@ -171,7 +171,8 @@ export async function main(): Promise<void> {
             console.log("Current film:", film.title);
             const first = { location: source_city, airport: demo_source};
             for (const place of film.locationAirports) {
-                const second = place;const flightResult = await getSkyscannerFlight(first.airport.entityId, second.airport.entityId);
+                const second = { location: place.location, airport: await getSkyscannerPlace(place.location) };
+                const flightResult = await getSkyscannerFlight(first.airport.entityId, second.airport.entityId);
                 console.log(`\n  Searching flight from ${first.location} to ${second.location}`);
                 if (flightResult) {
                     const quotes = flightResult.content?.results?.quotes || {};
